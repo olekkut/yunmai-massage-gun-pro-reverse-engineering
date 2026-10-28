@@ -1,0 +1,30 @@
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Agent Metadata & Internal Tooling
+.agents/
+.gemini/
+
+# Large Installers & Binary Executables
+*.exe
+*.msi
+*.zip
+*.tar.gz
+
+# Arduino / IDE Temporary Build Files
+build/
+*.hex
+*.elf
+*.o
+.vscode/
+.idea/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
