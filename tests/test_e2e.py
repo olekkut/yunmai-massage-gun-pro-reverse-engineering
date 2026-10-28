@@ -135,8 +135,13 @@ def check_case_sensitive_path(base_dir: Path, rel_path: str) -> tuple[bool, str]
     GitHub and Linux filesystems are strictly case-sensitive.
     """
     parts = Path(rel_path).parts
-    current = base_dir
+    current = base_dir.resolve()
     for part in parts:
+        if part == ".":
+            continue
+        if part == "..":
+            current = current.parent
+            continue
         if not current.exists():
             return False, f"Parent directory does not exist: {current}"
         try:
@@ -178,10 +183,43 @@ def validate_binary_header(path: Path) -> tuple[bool, str]:
     return True, ""
 
 
+def get_markdown_heading_slugs(content: str) -> set[str]:
+    """
+    Generate anchor slugs for all Markdown headings and explicit HTML anchors,
+    strictly adhering to GitHub CommonMark slugification rules.
+    """
+    # Strip multiline fenced code blocks (``` ... ``` or ~~~ ... ~~~)
+    clean = re.sub(r"```[\s\S]*?```", "", content)
+    clean = re.sub(r"~~~[\s\S]*?~~~", "", clean)
+
+    seen: dict[str, int] = {}
+    slugs = set()
+    for match in re.finditer(r"^(#{1,6})\s+(.+)$", clean, re.MULTILINE):
+        title = match.group(2).strip()
+        # Strip markdown links [text](url) -> text
+        c = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", title)
+        # Strip backticks, bold, italic
+        c = c.replace("`", "").replace("*", "").replace("_", "")
+        c = c.lower()
+        # Strip characters that are not alphanumeric, whitespace, or hyphen
+        c = re.sub(r"[^\w\s-]|_", "", c)
+        base_slug = c.replace(" ", "-")
+        count = seen.get(base_slug, 0)
+        seen[base_slug] = count + 1
+        slug = base_slug if count == 0 else f"{base_slug}-{count}"
+        slugs.add(slug)
+
+    # HTML <a id="..." name="..."> anchors
+    for match in re.finditer(r"""<a[^>]+(?:id|name)=["']([^"']+)["']""", clean, re.IGNORECASE):
+        slugs.add(match.group(1))
+
+    return slugs
+
+
 def extract_markdown_links(content: str) -> list[str]:
     """
-    Extract all local relative links from Markdown syntax and HTML tags.
-    Filters out code blocks, inline code, external HTTP/HTTPS links, and pure internal anchors.
+    Extract all local relative links and internal anchors from Markdown syntax and HTML tags.
+    Filters out code blocks, inline code, and external HTTP/HTTPS links.
     """
     # Strip multiline fenced code blocks (``` ... ``` or ~~~ ... ~~~)
     clean = re.sub(r"```[\s\S]*?```", "", content)
@@ -191,14 +229,14 @@ def extract_markdown_links(content: str) -> list[str]:
 
     links = []
     # Markdown links: [text](target) and ![alt](target)
-    md_pattern = re.compile(r"!?\[(?:[^\]]*)\]\(([^)#\s]+)(?:#[^\)]*)?\)")
+    md_pattern = re.compile(r"!?\[(?:[^\]]*)\]\(([^)\s]+)\)")
     for match in md_pattern.finditer(clean):
         link = match.group(1).strip()
         if link and not link.startswith(("http://", "https://", "mailto:", "ftp:")):
             links.append(link)
 
     # HTML <img> and <a> tags
-    html_pattern = re.compile(r"""<(?:img|a)[^>]+(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']""", re.IGNORECASE)
+    html_pattern = re.compile(r"""<(?:img|a)[^>]+(?:src|href)=["']([^"'\s]+)["']""", re.IGNORECASE)
     for match in html_pattern.finditer(clean):
         link = match.group(1).strip()
         if link and not link.startswith(("http://", "https://", "mailto:", "ftp:")):
@@ -398,7 +436,8 @@ class Tier2BoundaryCornerCases(unittest.TestCase):
     def test_02_all_markdown_links_resolve_without_broken_paths(self):
         """
         Scan all markdown files across the repository (excluding .agents)
-        and verify that every local link and image embed resolves to a real file.
+        and verify that every local link and image embed resolves to a real file,
+        and every internal #anchor link resolves to a valid heading slug on GitHub.
         """
         md_files = [
             p for p in REPO_ROOT.rglob("*.md")
@@ -408,25 +447,56 @@ class Tier2BoundaryCornerCases(unittest.TestCase):
 
         broken_links = []
         checked_count = 0
+        heading_slug_cache: dict[Path, set[str]] = {}
 
         for md_file in md_files:
             text = md_file.read_text(encoding="utf-8")
             links = extract_markdown_links(text)
+            if md_file not in heading_slug_cache:
+                heading_slug_cache[md_file] = get_markdown_heading_slugs(text)
+
             for link in links:
                 checked_count += 1
-                # Clean query strings or anchor tags
-                clean_link = link.split("?")[0].split("#")[0].strip()
-                if not clean_link:
-                    continue
-
-                if clean_link.startswith("/"):
-                    target = REPO_ROOT / clean_link.lstrip("/")
+                path_and_anchor = link.split("?")[0].strip()
+                if "#" in path_and_anchor:
+                    file_part, anchor_part = path_and_anchor.split("#", 1)
                 else:
-                    target = md_file.parent / clean_link
+                    file_part, anchor_part = path_and_anchor, None
 
-                if not (target.is_file() or target.is_dir()):
-                    rel_md = md_file.relative_to(REPO_ROOT)
-                    broken_links.append(f"{rel_md} -> '{link}' (target does not exist: {target})")
+                file_part = file_part.strip()
+                target_doc = None
+
+                # Check file target if non-empty
+                if file_part:
+                    if file_part.startswith("/"):
+                        target = REPO_ROOT / file_part.lstrip("/")
+                    else:
+                        target = md_file.parent / file_part
+
+                    if not (target.is_file() or target.is_dir()):
+                        rel_md = md_file.relative_to(REPO_ROOT)
+                        broken_links.append(f"{rel_md} -> '{link}' (target file/dir does not exist: {target})")
+                        continue
+
+                    if target.is_file() and target.suffix.lower() == ".md":
+                        target_doc = target.resolve()
+                else:
+                    target_doc = md_file.resolve()
+
+                # Check internal anchor if present
+                if anchor_part is not None:
+                    if target_doc is not None and target_doc.is_file():
+                        if target_doc not in heading_slug_cache:
+                            heading_slug_cache[target_doc] = get_markdown_heading_slugs(
+                                target_doc.read_text(encoding="utf-8")
+                            )
+                        target_slugs = heading_slug_cache[target_doc]
+                        if anchor_part not in target_slugs:
+                            rel_md = md_file.relative_to(REPO_ROOT)
+                            rel_target = target_doc.relative_to(REPO_ROOT)
+                            broken_links.append(
+                                f"{rel_md} -> '{link}' (anchor '#{anchor_part}' not found in {rel_target})"
+                            )
 
         self.assertEqual(
             broken_links,
@@ -438,7 +508,7 @@ class Tier2BoundaryCornerCases(unittest.TestCase):
     def test_03_case_sensitivity_for_cross_platform_compatibility(self):
         """
         Ensure all asset paths and markdown links match disk casing character-for-character
-        to guarantee compatibility on Linux and GitHub Pages.
+        across all repository documentation to guarantee compatibility on Linux and GitHub Pages.
         """
         case_violations = []
 
@@ -450,16 +520,20 @@ class Tier2BoundaryCornerCases(unittest.TestCase):
                 if not ok:
                     case_violations.append(err)
 
-        # Check all markdown image links in README.md
-        readme = REPO_ROOT / "README.md"
-        if readme.is_file():
-            links = extract_markdown_links(readme.read_text(encoding="utf-8"))
+        # Check all markdown file links across all documentation
+        md_files = [
+            p for p in REPO_ROOT.rglob("*.md")
+            if ".agents" not in p.parts and ".git" not in p.parts
+        ]
+        for md_file in md_files:
+            links = extract_markdown_links(md_file.read_text(encoding="utf-8"))
             for link in links:
                 clean_link = link.split("?")[0].split("#")[0].strip()
                 if clean_link and not clean_link.startswith(("/", "\\")):
-                    ok, err = check_case_sensitive_path(readme.parent, clean_link)
+                    ok, err = check_case_sensitive_path(md_file.parent, clean_link)
                     if not ok:
-                        case_violations.append(f"README.md link '{clean_link}': {err}")
+                        rel_md = md_file.relative_to(REPO_ROOT)
+                        case_violations.append(f"{rel_md} link '{clean_link}': {err}")
 
         self.assertEqual(
             case_violations,

@@ -5,14 +5,14 @@ This engineering guide documents the complete mechanical teardown, structural en
 ---
 
 ## Table of Contents
-1. [Teardown Tools & Preparation](#teardown-tools--preparation)
-2. [Step 1: Base Cap & Handle Battery Extraction](#step-1-base-cap--handle-battery-extraction)
-3. [Step 2: Outer Enclosure & Chassis Separation](#step-2-outer-enclosure--chassis-separation)
-4. [Step 3: Internal Chassis Frame Bracket](#step-3-internal-chassis-frame-bracket)
-5. [Step 4: Reciprocating Percussion Transmission Mechanism](#step-4-reciprocating-percussion-transmission-mechanism)
-6. [Step 5: Piston, Cylinder Sleeve & Linear Guide](#step-5-piston-cylinder-sleeve--linear-guide)
-7. [Step 6: Brushless Motor Mounting & Housing](#step-6-brushless-motor-mounting--housing)
-8. [Device Rating Plate & Model Identification](#device-rating-plate--model-identification)
+1. [Teardown Tools & Preparation](#1-teardown-tools--preparation)
+2. [Step 1: Base Cap & Handle Battery Extraction](#2-step-1-base-cap--handle-battery-extraction)
+3. [Step 2: Outer Enclosure & Chassis Separation](#3-step-2-outer-enclosure--chassis-separation)
+4. [Step 3: Internal Chassis Frame Bracket](#4-step-3-internal-chassis-frame-bracket)
+5. [Step 4: Reciprocating Percussion Transmission Mechanism](#5-step-4-reciprocating-percussion-transmission-mechanism)
+6. [Step 5: Piston, Cylinder Sleeve & Linear Guide](#6-step-5-piston-cylinder-sleeve--linear-guide)
+7. [Step 6: Brushless Motor Mounting & Housing](#7-step-6-brushless-motor-mounting--housing)
+8. [Device Rating Plate & Model Identification](#8-device-rating-plate--model-identification)
 
 ---
 

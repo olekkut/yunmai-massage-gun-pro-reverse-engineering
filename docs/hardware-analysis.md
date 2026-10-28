@@ -5,15 +5,15 @@ This engineering document provides an in-depth hardware breakdown of the electro
 ---
 
 ## Table of Contents
-1. [System Architecture Overview](#system-architecture-overview)
-2. [Power Tree & Conversion Subsystem](#power-tree--conversion-subsystem)
-3. [Mainboard Architecture (`YM-B563-MAIN-V0.3`)](#mainboard-architecture-ym-b563-main-v03)
-4. [Microcontroller & In-Circuit Programming Interface](#microcontroller--in-circuit-programming-interface)
-5. [Current Sensing & Locked-Rotor Protection](#current-sensing--locked-rotor-protection)
-6. [Motor Controller & Integrated Inverter](#motor-controller--integrated-inverter)
-7. [User Interface Daughterboard (`2116 WLS V0.9`)](#user-interface-daughterboard-2116-wls-v09)
-8. [Battery Pack & JETECH BMS Analysis](#battery-pack--jetech-bms-analysis)
-9. [AC/DC Wall Charger Specifications](#acdc-wall-charger-specifications)
+1. [System Architecture Overview](#1-system-architecture-overview)
+2. [Power Tree & Conversion Subsystem](#2-power-tree--conversion-subsystem)
+3. [Mainboard Architecture (`YM-B563-MAIN-V0.3`)](#3-mainboard-architecture-ym-b563-main-v03)
+4. [Microcontroller & In-Circuit Programming Interface](#4-microcontroller--in-circuit-programming-interface)
+5. [Current Sensing & Locked-Rotor Protection](#5-current-sensing--locked-rotor-protection)
+6. [Motor Controller & Integrated Inverter](#6-motor-controller--integrated-inverter)
+7. [User Interface Daughterboard (`2116 WLS V0.9`)](#7-user-interface-daughterboard-2116-wls-v09)
+8. [Battery Pack & JETECH BMS Analysis](#8-battery-pack--jetech-bms-analysis)
+9. [AC/DC Wall Charger Specifications](#9-acdc-wall-charger-specifications)
 
 ---
 

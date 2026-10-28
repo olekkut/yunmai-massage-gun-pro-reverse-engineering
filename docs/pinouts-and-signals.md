@@ -5,14 +5,14 @@ This document establishes the electrical specifications, connector pinouts, sign
 ---
 
 ## Table of Contents
-1. [Critical Color-Coding Hazard Warning](#critical-color-coding-hazard-warning)
-2. [Motor Interface Connector (`CN2`)](#motor-interface-connector-cn2)
-3. [Motor Datasheet & Termination Reference](#motor-datasheet--termination-reference)
-4. [Mainboard Bottom Solder Pad Array](#mainboard-bottom-solder-pad-array)
-5. [Tachometer Speed Feedback (FG) Waveform & Calculations](#tachometer-speed-feedback-fg-waveform--calculations)
-6. [PWM Speed Control Signal Characteristics](#pwm-speed-control-signal-characteristics)
-7. [In-Circuit Programming Port (`CN6`)](#in-circuit-programming-port-cn6)
-8. [Battery Main Power Connector (`CN1`)](#battery-main-power-connector-cn1)
+1. [Critical Color-Coding Hazard Warning](#1-critical-color-coding-hazard-warning)
+2. [Motor Interface Connector (`CN2`)](#2-motor-interface-connector-cn2)
+3. [Motor Datasheet & Termination Reference](#3-motor-datasheet--termination-reference)
+4. [Mainboard Bottom Solder Pad Array](#4-mainboard-bottom-solder-pad-array)
+5. [Tachometer Speed Feedback (FG) Waveform & Calculations](#5-tachometer-speed-feedback-fg-waveform--calculations)
+6. [PWM Speed Control Signal Characteristics](#6-pwm-speed-control-signal-characteristics)
+7. [In-Circuit Programming Port (`CN6`)](#7-in-circuit-programming-port-cn6)
+8. [Battery Main Power Connector (`CN1`)](#8-battery-main-power-connector-cn1)
 
 ---
 
