@@ -181,19 +181,25 @@ def validate_binary_header(path: Path) -> tuple[bool, str]:
 def extract_markdown_links(content: str) -> list[str]:
     """
     Extract all local relative links from Markdown syntax and HTML tags.
-    Filters out external HTTP/HTTPS links and pure internal anchors.
+    Filters out code blocks, inline code, external HTTP/HTTPS links, and pure internal anchors.
     """
+    # Strip multiline fenced code blocks (``` ... ``` or ~~~ ... ~~~)
+    clean = re.sub(r"```[\s\S]*?```", "", content)
+    clean = re.sub(r"~~~[\s\S]*?~~~", "", clean)
+    # Strip inline code spans (` ... `)
+    clean = re.sub(r"`[^`\n]+`", "", clean)
+
     links = []
     # Markdown links: [text](target) and ![alt](target)
     md_pattern = re.compile(r"!?\[(?:[^\]]*)\]\(([^)#\s]+)(?:#[^\)]*)?\)")
-    for match in md_pattern.finditer(content):
+    for match in md_pattern.finditer(clean):
         link = match.group(1).strip()
         if link and not link.startswith(("http://", "https://", "mailto:", "ftp:")):
             links.append(link)
 
     # HTML <img> and <a> tags
     html_pattern = re.compile(r"""<(?:img|a)[^>]+(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']""", re.IGNORECASE)
-    for match in html_pattern.finditer(content):
+    for match in html_pattern.finditer(clean):
         link = match.group(1).strip()
         if link and not link.startswith(("http://", "https://", "mailto:", "ftp:")):
             links.append(link)
